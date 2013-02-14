@@ -46,7 +46,7 @@ module IMS::LTI
   #
   class OutcomeResponse
     include IMS::LTI::Extensions::Base
-    
+
     attr_accessor :request_type, :score, :message_identifier, :response_code,
             :post_response, :code_major, :severity, :description, :operation,
             :message_ref_identifier
@@ -70,7 +70,7 @@ module IMS::LTI
       response = OutcomeResponse.new
       response.process_post_response(post_response)
     end
-    
+
     def process_post_response(post_response)
       self.post_response = post_response
       self.response_code = post_response.code
@@ -105,17 +105,27 @@ module IMS::LTI
 
     # Parse Outcome Response data from XML
     def process_xml(xml)
-      doc = REXML::Document.new xml
-      @message_identifier = doc.text("//imsx_statusInfo/imsx_messageIdentifier").to_s
-      @code_major = doc.text("//imsx_statusInfo/imsx_codeMajor")
-      @code_major.downcase! if @code_major
-      @severity = doc.text("//imsx_statusInfo/imsx_severity")
-      @severity.downcase! if @severity
-      @description = doc.text("//imsx_statusInfo/imsx_description")
-      @description = @description.to_s if @description
-      @message_ref_identifier = doc.text("//imsx_statusInfo/imsx_messageRefIdentifier")
-      @operation = doc.text("//imsx_statusInfo/imsx_operationRefIdentifier")
-      @score = doc.text("//readResultResponse//resultScore/textString")
+      begin
+        doc = REXML::Document.new xml
+        @message_identifier = doc.text("//imsx_statusInfo/imsx_messageIdentifier").to_s
+        @code_major = doc.text("//imsx_statusInfo/imsx_codeMajor")
+        @code_major.downcase! if @code_major
+        @severity = doc.text("//imsx_statusInfo/imsx_severity")
+        @severity.downcase! if @severity
+        @description = doc.text("//imsx_statusInfo/imsx_description")
+        @description = @description.to_s if @description
+        @message_ref_identifier = doc.text("//imsx_statusInfo/imsx_messageRefIdentifier")
+        @operation = doc.text("//imsx_statusInfo/imsx_operationRefIdentifier")
+        @score = doc.text("//readResultResponse//resultScore/textString")
+      rescue REXML::ParseException => e
+        @message_identifier = ''
+        @code_major = 'failure'
+        @severity = 'status'
+        @description = "#{e}"
+        @message_ref_identifier = '123456789'
+        @operation = 'replaceResult'
+        @score = ''
+      end
       @score = @score.to_s if @score
     end
 
@@ -125,7 +135,7 @@ module IMS::LTI
       builder = Builder::XmlMarkup.new
       builder.instruct!
 
-      builder.imsx_POXEnvelopeResponse("xmlns" => "http://www.imsglobal.org/lis/oms1p0/pox") do |env|
+      builder.imsx_POXEnvelopeResponse("xmlns" => "http://www.imsglobal.org/services/ltiv1p1/xsd/imsoms_v1p0") do |env|
         env.imsx_POXHeader do |header|
           header.imsx_POXResponseHeaderInfo do |info|
             info.imsx_version "V1.0"
