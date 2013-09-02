@@ -105,28 +105,21 @@ module IMS::LTI
 
     # Parse Outcome Response data from XML
     def process_xml(xml)
-      begin
-        doc = REXML::Document.new xml
-        @message_identifier = doc.text("//imsx_statusInfo/imsx_messageIdentifier").to_s
-        @code_major = doc.text("//imsx_statusInfo/imsx_codeMajor")
-        @code_major.downcase! if @code_major
-        @severity = doc.text("//imsx_statusInfo/imsx_severity")
-        @severity.downcase! if @severity
-        @description = doc.text("//imsx_statusInfo/imsx_description")
-        @description = @description.to_s if @description
-        @message_ref_identifier = doc.text("//imsx_statusInfo/imsx_messageRefIdentifier")
-        @operation = doc.text("//imsx_statusInfo/imsx_operationRefIdentifier")
-        @score = doc.text("//readResultResponse//resultScore/textString")
-      rescue REXML::ParseException => e
-        @message_identifier = ''
-        @code_major = 'failure'
-        @severity = 'status'
-        @description = "#{e}"
-        @message_ref_identifier = '123456789'
-        @operation = 'replaceResult'
-        @score = ''
-      end
+      doc = REXML::Document.new xml
+      @message_identifier = doc.text('//imsx_statusInfo/imsx_messageIdentifier').to_s
+      @code_major = doc.text('//imsx_statusInfo/imsx_codeMajor')
+      @code_major.downcase! if @code_major
+      @severity = doc.text('//imsx_statusInfo/imsx_severity')
+      @severity.downcase! if @severity
+      @description = doc.text('//imsx_statusInfo/imsx_description')
+      @description = @description.to_s if @description
+      @message_ref_identifier = doc.text('//imsx_statusInfo/imsx_messageRefIdentifier')
+      @operation = doc.text('//imsx_statusInfo/imsx_operationRefIdentifier')
+      @score = doc.text('//readResultResponse//resultScore/textString')
+
       @score = @score.to_s if @score
+    rescue
+      raise IMS::LTI::InvalidLTIResponseData, ''
     end
 
     # Generate XML based on the current configuration

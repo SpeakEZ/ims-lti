@@ -28,6 +28,14 @@ module IMS::LTI
     #     else
     #       # failed
     #     end
+    #
+    # Graded outcome +outcome_graded+ is a flag to specify whether the submission should be graded by the teacher
+    # It expects a 'true' or 'false' value graded by teacher or not, should set 'needs grading' in LMS if true.
+    #
+    #     provider.post_replace_result_with_data!(score,'graded' => 'true','url' => outcome_url)
+    #
+    # Can also be used in conjunction with outcome_url to show url to a students state for grading
+    #
     module OutcomeData
 
       #IMS::LTI::Extensions::OutcomeData::ToolProvider
@@ -45,7 +53,7 @@ module IMS::LTI
         def accepted_outcome_types
           return @outcome_types if @outcome_types
           @outcome_types = []
-          if val = @ext_params["outcome_data_values_accepted"]
+          if val = @ext_params['outcome_data_values_accepted']
             @outcome_types = val.split(',')
           end
 
@@ -54,21 +62,27 @@ module IMS::LTI
 
         # check if the outcome data extension is supported
         def accepts_outcome_data?
-          !!@ext_params["outcome_data_values_accepted"]
+          !!@ext_params['outcome_data_values_accepted']
         end
 
         # check if the consumer accepts text as outcome data
         def accepts_outcome_text?
-          accepted_outcome_types.member?("text")
+          accepted_outcome_types.member?('text')
         end
 
         # check if the consumer accepts a url as outcome data
         def accepts_outcome_url?
-          accepted_outcome_types.member?("url")
+          accepted_outcome_types.member?('url')
+        end
+
+        # check if the consumer accepts a graded as outcome data
+        def accepts_outcome_graded?
+          accepted_outcome_types.member?('graded')
         end
 
         # POSTs the given score to the Tool Consumer with a replaceResult and
-        # adds the specified data. The data hash can have the keys "text", "cdata_text", or "url"
+        # adds the specified data. The data hash can have the keys "text", "cdata_text",
+        # "url" or "graded" (Graded expects a true/false value)
         #
         # If  both cdata_text and text are sent, cdata_text will be used
         #
@@ -77,12 +91,13 @@ module IMS::LTI
         # @return [OutcomeResponse] the response from the Tool Consumer
         def post_replace_result_with_data!(score, data={})
           req = new_request
-          if data["cdata_text"] 
-            req.outcome_cdata_text = data["cdata_text"] 
-          elsif data["text"]
-            req.outcome_text = data["text"]
+          if data['cdata_text']
+            req.outcome_cdata_text = data['cdata_text']
+          elsif data['text']
+            req.outcome_text = data['text']
           end
-          req.outcome_url = data["url"] if data["url"]
+          req.outcome_url = data['url'] if data['url']
+          req.outcome_graded = data['graded'] if data['graded']
           req.post_replace_result!(score)
         end
 
@@ -92,10 +107,10 @@ module IMS::LTI
         include IMS::LTI::Extensions::ExtensionBase
         include Base
         
-        OUTCOME_DATA_TYPES = %w{text url}
+        OUTCOME_DATA_TYPES = %w{text url graded}
 
-        # a list of the outcome data types accepted, currently only 'url' and
-        # 'text' are valid
+        # a list of the outcome data types accepted, currently only 'url',
+        # 'text' and 'graded' are valid
         #
         #    tc.outcome_data_values_accepted(['url', 'text'])
         #    tc.outcome_data_valued_accepted("url,text")
@@ -122,11 +137,11 @@ module IMS::LTI
         include IMS::LTI::Extensions::ExtensionBase
         include Base
 
-        attr_accessor :outcome_text, :outcome_url, :outcome_cdata_text
+        attr_accessor :outcome_text, :outcome_url, :outcome_graded, :outcome_cdata_text
 
         def result_values(node)
           super
-          if @outcome_text || @outcome_url || @outcome_cdata_text
+          if @outcome_text || @outcome_url || @outcome_graded || @outcome_cdata_text
             node.resultData do |res_data|
               if @outcome_cdata_text
                 res_data.text {
@@ -136,18 +151,20 @@ module IMS::LTI
                 res_data.text @outcome_text
               end
               res_data.url @outcome_url if @outcome_url
+              res_data.graded @outcome_graded if @outcome_graded
             end
           end
         end
 
         def has_result_data?
-          !!@outcome_text || !!@outcome_url || super
+          !!@outcome_text || !!@outcome_url || !!@outcome_graded || super
         end
         
         def extention_process_xml(doc)
           super
-          @outcome_text = doc.get_text("//resultRecord/result/resultData/text")
-          @outcome_url = doc.get_text("//resultRecord/result/resultData/url")
+          @outcome_text   = doc.get_text('//resultRecord/result/resultData/text')
+          @outcome_url    = doc.get_text('//resultRecord/result/resultData/url')
+          @outcome_graded = doc.get_text('//resultRecord/result/resultData/graded')
         end
       end
 

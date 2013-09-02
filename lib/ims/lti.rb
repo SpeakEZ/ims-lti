@@ -32,6 +32,8 @@ module IMS # :nodoc:
     
     class InvalidLTIConfigError < StandardError
     end
+    class InvalidLTIResponseData < StandardError
+    end
 
     # Generates a unique identifier
     def self.generate_identifier
