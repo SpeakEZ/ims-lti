@@ -29,10 +29,11 @@ module IMS::LTI
     #       # failed
     #     end
     #
-    # Graded outcome +outcome_graded+ is a flag to specify whether the submission should be graded by the teacher
-    # It expects a 'true' or 'false' value graded by teacher or not, should set 'needs grading' in LMS if true.
+    # Needs Grading outcome +outcome_needs_grading+ is a flag to specify whether the submission should be
+    # needs_grading by the teacher It expects to be present or 'true' or 'false' value needs_grading by
+    # teacher or not, should set 'needs grading' in LMS if true or graded if false.
     #
-    #     provider.post_replace_result_with_data!(score,'graded' => 'true','url' => outcome_url)
+    #     provider.post_replace_result_with_data!(score,'needs_grading' => 'true','url' => outcome_url)
     #
     # Can also be used in conjunction with outcome_url to show url to a students state for grading
     #
@@ -75,14 +76,14 @@ module IMS::LTI
           accepted_outcome_types.member?('url')
         end
 
-        # check if the consumer accepts a graded as outcome data
-        def accepts_outcome_graded?
-          accepted_outcome_types.member?('graded')
+        # check if the consumer accepts a needs_grading as outcome data
+        def accepts_outcome_needs_grading?
+          accepted_outcome_types.member?('needs_grading')
         end
 
         # POSTs the given score to the Tool Consumer with a replaceResult and
         # adds the specified data. The data hash can have the keys "text", "cdata_text",
-        # "url" or "graded" (Graded expects a true/false value)
+        # "url" or "needs_grading" (needs_grading expects a true/false value)
         #
         # If  both cdata_text and text are sent, cdata_text will be used
         #
@@ -97,7 +98,7 @@ module IMS::LTI
             req.outcome_text = data['text']
           end
           req.outcome_url = data['url'] if data['url']
-          req.outcome_graded = data['graded'] if data['graded']
+          req.outcome_needs_grading = data['needs_grading'] if data['needs_grading']
           req.post_replace_result!(score)
         end
 
@@ -107,10 +108,10 @@ module IMS::LTI
         include IMS::LTI::Extensions::ExtensionBase
         include Base
         
-        OUTCOME_DATA_TYPES = %w{text url graded}
+        OUTCOME_DATA_TYPES = %w{text url needs_grading}
 
         # a list of the outcome data types accepted, currently only 'url',
-        # 'text' and 'graded' are valid
+        # 'text' and 'needs_grading' are valid
         #
         #    tc.outcome_data_values_accepted(['url', 'text'])
         #    tc.outcome_data_valued_accepted("url,text")
@@ -137,11 +138,11 @@ module IMS::LTI
         include IMS::LTI::Extensions::ExtensionBase
         include Base
 
-        attr_accessor :outcome_text, :outcome_url, :outcome_graded, :outcome_cdata_text
+        attr_accessor :outcome_text, :outcome_url, :outcome_needs_grading, :outcome_cdata_text
 
         def result_values(node)
           super
-          if @outcome_text || @outcome_url || @outcome_graded || @outcome_cdata_text
+          if @outcome_text || @outcome_url || @outcome_needs_grading || @outcome_cdata_text
             node.resultData do |res_data|
               if @outcome_cdata_text
                 res_data.text {
@@ -151,20 +152,20 @@ module IMS::LTI
                 res_data.text @outcome_text
               end
               res_data.url @outcome_url if @outcome_url
-              res_data.graded @outcome_graded if @outcome_graded
+              res_data.needs_grading @outcome_needs_grading if @outcome_needs_grading
             end
           end
         end
 
         def has_result_data?
-          !!@outcome_text || !!@outcome_url || !!@outcome_graded || super
+          !!@outcome_text || !!@outcome_url || !!@outcome_needs_grading || super
         end
         
         def extention_process_xml(doc)
           super
           @outcome_text   = doc.get_text('//resultRecord/result/resultData/text')
           @outcome_url    = doc.get_text('//resultRecord/result/resultData/url')
-          @outcome_graded = doc.get_text('//resultRecord/result/resultData/graded')
+          @outcome_needs_grading = doc.get_text('//resultRecord/result/resultData/needs_grading')
         end
       end
 
