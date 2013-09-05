@@ -1,0 +1,111 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Ims-lti by SpeakEZ</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Ims-lti</h1>
+        <p>A Ruby library to help implement IMS LTI tool consumers and providers (MIL Fork adds new data extensions)</p>
+        <p class="view"><a href="https://github.com/SpeakEZ/ims-lti">View the Project on GitHub <small>SpeakEZ/ims-lti</small></a></p>
+        <ul>
+          <li><a href="https://github.com/SpeakEZ/ims-lti/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/SpeakEZ/ims-lti/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/SpeakEZ/ims-lti">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h3>
+<a name="mil-ims-lti" class="anchor" href="#mil-ims-lti"><span class="octicon octicon-link"></span></a>MIL-IMS-LTI</h3>
+
+<p>This is the Middlebury Interactive Languages fork of the <a href="https://github.com/instructure/ims-lti">Instructure IMS-LTI</a> gem.  It adds a new outcome data type that allows instructors to have instructor graded assignments within the <a href="http://www.middleburyinteractive.com">Middlebury platform</a> on any LMS through LTI.</p>
+
+<h2>
+<a name="problem" class="anchor" href="#problem"><span class="octicon octicon-link"></span></a>Problem</h2>
+
+<p>Submitting a grade through LTI will have it graded immediately.  This prevents an instructor from having a chance to see a list of submissions that <code>need grading</code> and giving each student a grade
+based on the students work for an <code>essay</code> or <code>audio</code> submission etc.</p>
+
+<h2>
+<a name="solution" class="anchor" href="#solution"><span class="octicon octicon-link"></span></a>Solution</h2>
+
+<p>Adding a new outcome data extension key/value pair that will allow a submission to be marked as needs grading.  This prevents the LMS from grading the assignment and allows the instructor to review it first and give it a grade accordingly.</p>
+
+<h2>
+<a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<p>First create a tool provider with the OutcomeData extensions:</p>
+
+<div class="highlight"><pre>    <span class="n">tp</span> <span class="o">=</span> <span class="ss">IMS</span><span class="p">:</span><span class="ss">:LTI</span><span class="o">::</span><span class="no">ToolProvider</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">consumer_key</span><span class="p">,</span> <span class="n">shared_secret</span><span class="p">,</span> <span class="n">lti_params</span><span class="p">)</span>
+    <span class="n">tp</span><span class="o">.</span><span class="n">extend</span> <span class="ss">IMS</span><span class="p">:</span><span class="ss">:LTI</span><span class="o">::</span><span class="ss">Extensions</span><span class="p">:</span><span class="ss">:OutcomeData</span><span class="o">::</span><span class="no">ToolProvider</span> 
+</pre></div>
+
+<p>Next check the lms for support and use post_replace_result_with_data with the new <code>needs_grading</code> param:</p>
+
+<div class="highlight"><pre>    <span class="k">if</span> <span class="n">tp</span><span class="o">.</span><span class="n">accepts_outcome_needs_grading?</span> 
+        <span class="n">tp</span><span class="o">.</span><span class="n">post_replace_result_with_data!</span><span class="p">(</span><span class="n">score_lti</span><span class="p">,</span><span class="s1">'needs_grading'</span> <span class="o">=&gt;</span> <span class="s1">'true'</span><span class="p">)</span>
+    <span class="k">end</span>
+</pre></div>
+
+<p>Optionally use url to give the instructor a link to the students work for grading:</p>
+
+<div class="highlight"><pre>    <span class="k">if</span> <span class="n">tp</span><span class="o">.</span><span class="n">accepts_outcome_needs_grading?</span> <span class="o">&amp;&amp;</span> <span class="n">tp</span><span class="o">.</span><span class="n">accepts_outcome_url?</span>
+        <span class="n">tp</span><span class="o">.</span><span class="n">post_replace_result_with_data!</span><span class="p">(</span>
+            <span class="n">score_lti</span><span class="p">,</span>
+            <span class="s1">'needs_grading'</span> <span class="o">=&gt;</span> <span class="s1">'true'</span><span class="p">,</span>
+            <span class="s1">'url'</span> <span class="o">=&gt;</span> <span class="s1">'http://www.example.com/assignment/student_id'</span>
+        <span class="p">)</span>
+    <span class="k">end</span>
+</pre></div>
+
+<h2>
+<a name="add-this-gem-to-your-project" class="anchor" href="#add-this-gem-to-your-project"><span class="octicon octicon-link"></span></a>Add this gem to your project</h2>
+
+<pre><code>$ gem install mil-ims-lti
+</code></pre>
+
+<div class="highlight"><pre>    <span class="c1"># Gemfile</span>
+    <span class="n">gem</span> <span class="s1">'mil-ims-lti'</span><span class="p">,</span> <span class="s1">'~&gt; 1.1.6'</span>
+</pre></div>
+
+<h2>
+<a name="requires-lms-implementation" class="anchor" href="#requires-lms-implementation"><span class="octicon octicon-link"></span></a>Requires LMS implementation</h2>
+
+<p>Each LMS will need to implement and accept the <code>needs_grading</code> data type then use this value when present to prevent grading from happening on a submission recieved from LTI. This modification has been made to the <a href="https://github.com/SpeakEZ/canvas-lms">MIL fork of Canvas</a> as an example.</p>
+
+<h3>
+<a name="authors-and-contributors" class="anchor" href="#authors-and-contributors"><span class="octicon octicon-link"></span></a>Authors and Contributors</h3>
+
+<p>This was added by the Middlebury Interactive Languages Development team. </p>
+      </section>
+    </div>
+    <footer>
+      <p>Project maintained by <a href="https://github.com/SpeakEZ">SpeakEZ</a></p>
+      <p>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></p>
+    </footer>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-32662727-3");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>
