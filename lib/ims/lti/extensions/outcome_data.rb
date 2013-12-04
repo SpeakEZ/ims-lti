@@ -81,6 +81,25 @@ module IMS::LTI
           accepted_outcome_types.member?('needs_grading')
         end
 
+        # check if the consumer accepts a date as outcome data
+        #
+        # currently only supported by BrainHoney
+        def accepts_outcome_date?
+          accepted_outcome_types.member?('date')
+        end
+
+        # check if the consumer accepts a statusOfResult as outcome data
+        #
+        # currently only supported by BrainHoney
+        #
+        # Setting a Needs-Grading Status
+        #
+        # Tools that wish to indicate that the student's work needs grading in the tool may include in the XML the LIS-defined statusofResult element with the value tobemoderated:
+        # the value of this element should be set to tobemoderated
+        def accepts_outcome_status_of_result?
+          accepted_outcome_types.member?('statusofResult')
+        end
+
         # POSTs the given score to the Tool Consumer with a replaceResult and
         # adds the specified data. The data hash can have the keys "text", "cdata_text",
         # "url" or "needs_grading" (needs_grading expects a true/false value)
@@ -99,6 +118,8 @@ module IMS::LTI
           end
           req.outcome_url = data['url'] if data['url']
           req.outcome_needs_grading = data['needs_grading'] if data['needs_grading']
+          req.date = data['date'] if data['date']
+          req.status_of_result = data['statusofResult'] if data['statusofResult']
           req.post_replace_result!(score)
         end
 
@@ -107,8 +128,8 @@ module IMS::LTI
       module ToolConsumer
         include IMS::LTI::Extensions::ExtensionBase
         include Base
-        
-        OUTCOME_DATA_TYPES = %w{text url needs_grading}
+
+        OUTCOME_DATA_TYPES = %w{text url needs_grading date status_of_result}
 
         # a list of the outcome data types accepted, currently only 'url',
         # 'text' and 'needs_grading' are valid
@@ -119,7 +140,7 @@ module IMS::LTI
           if val.is_a? Array
             val = val.join(',')
           end
-          
+
           set_ext_param('outcome_data_values_accepted', val)
         end
 
@@ -127,7 +148,7 @@ module IMS::LTI
         def outcome_data_values_accepted
           get_ext_param('outcome_data_values_accepted')
         end
-        
+
         # convenience method for setting support for all current outcome data types
         def support_outcome_data!
           self.outcome_data_values_accepted = OUTCOME_DATA_TYPES
@@ -142,7 +163,7 @@ module IMS::LTI
 
         def result_values(node)
           super
-          if @outcome_text || @outcome_url || @outcome_needs_grading || @outcome_cdata_text
+          if @outcome_text || @outcome_url || @outcome_needs_grading || @outcome_cdata_text || @outcome_status_of_result || @outcome_date
             node.resultData do |res_data|
               if @outcome_cdata_text
                 res_data.text {
@@ -153,19 +174,23 @@ module IMS::LTI
               end
               res_data.url @outcome_url if @outcome_url
               res_data.needs_grading @outcome_needs_grading if @outcome_needs_grading
+              res_data.status_of_result @outcome_status_of_result if @outcome_status_of_result
+              res_data.date @outcome_date if @outcome_date
             end
           end
         end
 
         def has_result_data?
-          !!@outcome_text || !!@outcome_url || !!@outcome_needs_grading || super
+          !!@outcome_text || !!@outcome_url || !!@outcome_needs_grading || @outcome_status_of_result || @outcome_date || super
         end
-        
+
         def extention_process_xml(doc)
           super
           @outcome_text   = doc.get_text('//resultRecord/result/resultData/text')
           @outcome_url    = doc.get_text('//resultRecord/result/resultData/url')
           @outcome_needs_grading = doc.get_text('//resultRecord/result/resultData/needs_grading')
+          @outcome_date = doc.get_text('//resultRecord/result/resultData/date')
+          @outcome_status_of_result = doc.get_text('//resultRecord/result/resultData/status_of_result')
         end
       end
 
