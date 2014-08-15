@@ -72,6 +72,8 @@ module IMS::LTI
     end
 
     def process_post_response(post_response)
+      puts "jake post_response #{post_response}"
+
       self.post_response = post_response
       self.response_code = post_response.code
       xml = post_response.body
@@ -105,6 +107,8 @@ module IMS::LTI
 
     # Parse Outcome Response data from XML
     def process_xml(xml)
+      puts "jake response xml #{xml}"
+
       doc = REXML::Document.new xml
       @message_identifier = doc.text('//imsx_statusInfo/imsx_messageIdentifier').to_s
       @code_major = doc.text('//imsx_statusInfo/imsx_codeMajor')

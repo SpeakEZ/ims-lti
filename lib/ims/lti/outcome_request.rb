@@ -130,6 +130,10 @@ module IMS::LTI
               generate_request_xml,
               'Content-Type' => 'application/xml'
       )
+
+      puts "jake @lis_outcome_service_url #{@lis_outcome_service_url}"
+      puts "jake res.inspect #{res.inspect}"
+
       @outcome_response = extend_outcome_response(OutcomeResponse.new)
       @outcome_response.process_post_response(res)
     end
@@ -148,6 +152,9 @@ module IMS::LTI
         @operation = REPLACE_REQUEST
         @score = doc.get_text("//resultRecord/result/resultScore/textString")
       end
+
+      puts "jake doc #{doc}"
+
       extention_process_xml(doc)
     end
 
