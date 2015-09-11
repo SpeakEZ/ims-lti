@@ -119,6 +119,7 @@ module IMS::LTI
 
       @score = @score.to_s if @score
     rescue
+      puts "jake process_xml failure #{xml}"
       raise IMS::LTI::InvalidLTIResponseData, ''
     end
 
