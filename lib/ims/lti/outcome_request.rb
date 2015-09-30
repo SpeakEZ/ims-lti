@@ -165,6 +165,16 @@ module IMS::LTI
 
       node.result do |res|
         result_values(res)
+        handle_bh_extensions(res)
+      end
+    end
+
+    def handle_bh_extensions(node)
+      if @date
+        node.tag!('date', @date.to_s)
+      end
+      if @status_of_result
+        node.tag!('statusOfResult', @status_of_result.to_s)
       end
     end
 
