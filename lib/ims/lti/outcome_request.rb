@@ -174,7 +174,7 @@ module IMS::LTI
         node.tag!('date', @date.to_s)
       end
       if @status_of_result
-        node.tag!('statusOfResult', @status_of_result.to_s)
+        node.tag!('statusofResult', @status_of_result.to_s)
       end
     end
 
