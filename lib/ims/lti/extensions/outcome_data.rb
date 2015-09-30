@@ -159,7 +159,7 @@ module IMS::LTI
         include IMS::LTI::Extensions::ExtensionBase
         include Base
 
-        attr_accessor :outcome_text, :outcome_url, :outcome_needs_grading, :outcome_cdata_text
+        attr_accessor :outcome_text, :outcome_url, :outcome_needs_grading, :outcome_cdata_text, :date, :status_of_result
 
         def result_values(node)
           super
