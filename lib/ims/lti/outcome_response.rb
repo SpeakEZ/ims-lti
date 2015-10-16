@@ -105,6 +105,10 @@ module IMS::LTI
 
     # Parse Outcome Response data from XML
     def process_xml(xml)
+      if xml.include?('#<UUID:0x')              # Blackboard bug!
+        m_id = xml.match('#<UUID:(\w+)>')[1].hex.to_i
+        xml = xml.sub(/#<UUID:\w+>/, m_id.to_s)
+      end
       doc = REXML::Document.new xml
       @message_identifier = doc.text('//imsx_statusInfo/imsx_messageIdentifier')
       @message_identifier = doc.text('//imsx_messageIdentifier') if @message_identifier.nil?
