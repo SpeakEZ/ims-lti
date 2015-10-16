@@ -106,7 +106,9 @@ module IMS::LTI
     # Parse Outcome Response data from XML
     def process_xml(xml)
       doc = REXML::Document.new xml
-      @message_identifier = doc.text('//imsx_statusInfo/imsx_messageIdentifier').to_s
+      @message_identifier = doc.text('//imsx_statusInfo/imsx_messageIdentifier')
+      @message_identifier = doc.text('//imsx_messageIdentifier') if @message_identifier.nil?
+      @message_identifier = @message_identifier.nil? ? '0' : @message_identifier.to_s
       @code_major = doc.text('//imsx_statusInfo/imsx_codeMajor')
       @code_major.downcase! if @code_major
       @severity = doc.text('//imsx_statusInfo/imsx_severity')
